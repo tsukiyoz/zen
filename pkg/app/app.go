@@ -13,9 +13,16 @@ import (
 
 var appFlags cliflag.NamedFlagSets
 
-// RegisterFlags register custom flags to appFlags, it should run before CompleteCommand.
-func RegisterFlags(fss cliflag.NamedFlagSets) {
-	for _, fs := range fss.FlagSets {
+type AppOption interface {
+	Flags() cliflag.NamedFlagSets
+}
+
+var appOptions AppOption
+
+func SetOption(opt AppOption) {
+	appOptions = opt
+
+	for _, fs := range opt.Flags().FlagSets {
 		appFlags.AddFlagSet(fs)
 	}
 }
@@ -45,7 +52,7 @@ func PreRunE(cmd *cobra.Command, args []string) error {
 
 	logs.Init()
 
-	if err := config.Init(cmd); err != nil {
+	if err := config.Init(cmd, appOptions); err != nil {
 		return err
 	}
 

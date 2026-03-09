@@ -51,8 +51,17 @@ The structure is intentionally minimal. Adapt it to your needs.
 # Build
 go build -o zen
 
-# Run
-./zen
+# Run with defaults
+./zen runner
+
+# Run with custom config file
+./zen runner -c config/runner.yaml
+
+# Run with debug logging
+./zen runner --log-level=debug
+
+# Run with custom config and text log format
+./zen runner -c config/runner.yaml --log-level=debug --log-format=text
 ```
 
 ## Acknowledgments

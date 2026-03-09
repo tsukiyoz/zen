@@ -30,8 +30,8 @@ var runnerCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(runnerCmd)
 
-	s := runner.NewOptions()
+	sopt := runner.NewOptions()
 
-	app.RegisterFlags(s.Flags())
+	app.SetOption(sopt)
 	app.CompleteCommand(runnerCmd)
 }

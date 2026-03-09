@@ -30,8 +30,8 @@ func AddFlags(fs *pflag.FlagSet) {
 	})
 }
 
-func Init(cmd *cobra.Command) error {
-	slog.Debug("Loading env configuration", "prefix", strings.ToUpper(cmd.Name()))
+func Init(cmd *cobra.Command, opt any) error {
+	slog.Debug("Loading env configurations...", "component", cmd.Name())
 	viper.SetEnvPrefix(cmd.Name())
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "_"))
 	viper.AutomaticEnv()
@@ -64,6 +64,12 @@ func Init(cmd *cobra.Command) error {
 	err := viper.BindPFlags(cmd.Flags())
 	if err != nil {
 		return err
+	}
+
+	if opt != nil {
+		if err := viper.Unmarshal(opt); err != nil {
+			slog.Error("unmarshal configs failed", "err", err)
+		}
 	}
 
 	return nil

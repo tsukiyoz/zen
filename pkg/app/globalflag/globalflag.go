@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	cliflag "zen/pkg/app/flag"
 	"zen/pkg/logs"
 
 	"github.com/spf13/pflag"
 )
-
-var globalFlags cliflag.NamedFlagSets
 
 // AddGlobalFlags explicitly registers flags that libraries (log, verflag, etc.) register
 // against the global flagsets from "flag".
