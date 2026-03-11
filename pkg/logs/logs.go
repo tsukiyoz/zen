@@ -3,6 +3,7 @@ package logs
 import (
 	"log/slog"
 	"os"
+	"sync"
 
 	"github.com/spf13/pflag"
 )
@@ -18,32 +19,56 @@ func init() {
 	packageFlags.StringVar(&format, "log-format", "json", "log output format(text,json)")
 }
 
-const (
-	timeFormat = "2006-01-02 15:04:05.000"
+var (
+	initOnce sync.Once
+	logger   *slog.Logger
 )
 
-func Init() {
-	var level slog.Level
-	err := level.UnmarshalText([]byte(logLevel))
-	if err != nil {
-		panic("failed to init log")
-	}
-	opts := &slog.HandlerOptions{
-		Level:     slog.Level(level),
-		AddSource: false,
-	}
+func Init(opts ...Option) *slog.Logger {
+	initOnce.Do(func() {
+		opt := &options{
+			level:  logLevel,
+			format: format,
+		}
 
-	var handler slog.Handler
-	switch format {
-	case "json":
-		handler = slog.NewJSONHandler(os.Stdout, opts)
-	case "text":
-		handler = slog.NewTextHandler(os.Stdout, opts)
-	default:
-		handler = slog.NewTextHandler(os.Stdout, opts)
-	}
+		for _, o := range opts {
+			o(opt)
+		}
 
-	slog.SetDefault(slog.New(handler))
+		var level slog.Level
+		err := level.UnmarshalText([]byte(opt.level))
+		if err != nil {
+			panic("failed to init log")
+		}
+		sopt := &slog.HandlerOptions{
+			Level:     slog.Level(level),
+			AddSource: opt.addSource,
+		}
+
+		if opt.replaceAttr != nil {
+			sopt.ReplaceAttr = opt.replaceAttr
+		}
+
+		var handler slog.Handler
+
+		if opt.handler != nil {
+			handler = opt.handler
+		} else {
+			switch opt.format {
+			case "json":
+				handler = slog.NewJSONHandler(os.Stdout, sopt)
+			case "text":
+				handler = slog.NewTextHandler(os.Stdout, sopt)
+			}
+		}
+		if handler == nil {
+			handler = slog.NewTextHandler(os.Stdout, sopt)
+		}
+
+		logger = slog.New(handler)
+	})
+
+	return logger
 }
 
 func AddFlags(fs *pflag.FlagSet) {

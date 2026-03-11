@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log/slog"
 
 	"zen/pkg/app/config"
 	cliflag "zen/pkg/app/flag"
@@ -50,7 +51,8 @@ func PreRunE(cmd *cobra.Command, args []string) error {
 	ctx := signal.SetupSignalContext()
 	cmd.SetContext(ctx)
 
-	logs.Init()
+	logger := logs.Init(logs.WithReplaceAttr(logAttrReplacer))
+	slog.SetDefault(logger)
 
 	if err := config.Init(cmd, appOptions); err != nil {
 		return err
